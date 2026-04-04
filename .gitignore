@@ -1,0 +1,71 @@
+# ========================
+# HoloCoach AI - .gitignore
+# ========================
+
+# --- Node.js / Next.js ---
+node_modules/
+.next/
+out/
+.turbo/
+dist/
+build/
+*.tsbuildinfo
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+*.egg
+.eggs/
+venv/
+.venv/
+env/
+.env
+.env.local
+.env.*.local
+
+# --- AI / ML ---
+*.pt
+*.pth
+*.onnx
+*.trt
+*.h5
+*.pkl
+*.joblib
+data/trained-models/*.bin
+data/trained-models/*.pt
+data/sample-videos/*.mp4
+data/sample-videos/*.avi
+
+# --- IDE ---
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# --- OS ---
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- Docker ---
+docker-compose.override.yml
+
+# --- Testing ---
+coverage/
+.coverage
+htmlcov/
+.pytest_cache/
+.mypy_cache/
+
+# --- Logs ---
+*.log
+logs/
+
+# --- Misc ---
+*.bak
+*.tmp
+.cache/

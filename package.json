@@ -1,0 +1,18 @@
+{
+  "name": "holocoach-ai",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Real-time AI + AR Sports Coaching Platform",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace=apps/web",
+    "build": "npm run build --workspace=apps/web",
+    "lint": "npm run lint --workspace=apps/web"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
