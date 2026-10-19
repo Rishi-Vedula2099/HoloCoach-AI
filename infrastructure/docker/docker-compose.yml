@@ -1,0 +1,160 @@
+version: "3.8"
+
+services:
+  # ─── Frontend ───
+  web:
+    build:
+      context: ../../apps/web
+      dockerfile: ../../infrastructure/docker/Dockerfile.web
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://api-gateway:8000
+      - NEXT_PUBLIC_WS_URL=ws://api-gateway:8000
+    depends_on:
+      - api-gateway
+    networks:
+      - holocoach
+
+  # ─── API Gateway ───
+  api-gateway:
+    build:
+      context: ../..
+      dockerfile: infrastructure/docker/Dockerfile.api
+    ports:
+      - "8000:8000"
+    environment:
+      - SECRET_KEY=${SECRET_KEY:-holocoach-dev-secret-key}
+      - DATABASE_URL=postgresql://holocoach:holocoach@db:5432/holocoach
+      - REDIS_URL=redis://redis:6379
+      - POSE_SERVICE_URL=http://pose-service:8001
+      - MOTION_SERVICE_URL=http://motion-analysis:8002
+      - FEEDBACK_SERVICE_URL=http://feedback-engine:8003
+      - VIDEO_SERVICE_URL=http://video-processor:8004
+    depends_on:
+      - db
+      - redis
+    networks:
+      - holocoach
+
+  # ─── Pose Service ───
+  pose-service:
+    build:
+      context: ../..
+      dockerfile: infrastructure/docker/Dockerfile.service
+    command: python -m uvicorn main:app --host 0.0.0.0 --port 8001
+    working_dir: /app/services/pose-service
+    ports:
+      - "8001:8001"
+    volumes:
+      - ../../data:/app/data
+    networks:
+      - holocoach
+
+  # ─── Motion Analysis ───
+  motion-analysis:
+    build:
+      context: ../..
+      dockerfile: infrastructure/docker/Dockerfile.service
+    command: python -m uvicorn main:app --host 0.0.0.0 --port 8002
+    working_dir: /app/services/motion-analysis
+    ports:
+      - "8002:8002"
+    networks:
+      - holocoach
+
+  # ─── Feedback Engine ───
+  feedback-engine:
+    build:
+      context: ../..
+      dockerfile: infrastructure/docker/Dockerfile.service
+    command: python -m uvicorn main:app --host 0.0.0.0 --port 8003
+    working_dir: /app/services/feedback-engine
+    ports:
+      - "8003:8003"
+    networks:
+      - holocoach
+
+  # ─── Video Processor ───
+  video-processor:
+    build:
+      context: ../..
+      dockerfile: infrastructure/docker/Dockerfile.service
+    command: python -m uvicorn main:app --host 0.0.0.0 --port 8004
+    working_dir: /app/services/video-processor
+    ports:
+      - "8004:8004"
+    volumes:
+      - ../../data:/app/data
+    networks:
+      - holocoach
+
+  # ─── Database ───
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: holocoach
+      POSTGRES_PASSWORD: holocoach
+      POSTGRES_DB: holocoach
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U holocoach"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - holocoach
+
+  # ─── Redis ───
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - holocoach
+
+  # ─── Prometheus ───
+  prometheus:
+    image: prom/prometheus:v2.48.0
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    depends_on:
+      - api-gateway
+    networks:
+      - holocoach
+
+  # ─── Grafana ───
+  grafana:
+    image: grafana/grafana:10.2.0
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=holocoach
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+    networks:
+      - holocoach
+
+volumes:
+  pgdata:
+  grafana_data:
+
+networks:
+  holocoach:
+    driver: bridge

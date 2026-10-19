@@ -1,0 +1,33 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: "api-gateway"
+    static_configs:
+      - targets: ["api-gateway:8000"]
+    metrics_path: /metrics
+
+  - job_name: "pose-service"
+    static_configs:
+      - targets: ["pose-service:8001"]
+    metrics_path: /metrics
+
+  - job_name: "motion-analysis"
+    static_configs:
+      - targets: ["motion-analysis:8002"]
+    metrics_path: /metrics
+
+  - job_name: "feedback-engine"
+    static_configs:
+      - targets: ["feedback-engine:8003"]
+    metrics_path: /metrics
+
+  - job_name: "video-processor"
+    static_configs:
+      - targets: ["video-processor:8004"]
+    metrics_path: /metrics
+
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]
